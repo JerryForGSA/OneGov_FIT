@@ -2865,7 +2865,8 @@
                                     }
                                 } else if (entityType === 'Vendors') {
                                     // Vendor cards show Agencies table
-                                    firstTableTitle = 'Agencies';  
+                                    firstTableTitle = 'Agencies';
+                                    
                                     if (entity.fundingAgency?.top_10_agency_summaries) {
                                         Object.entries(entity.fundingAgency.top_10_agency_summaries).forEach(([agencyName, data]) => {
                                             if (typeof data === 'object' && data.total) {

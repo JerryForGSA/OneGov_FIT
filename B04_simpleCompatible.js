@@ -979,6 +979,31 @@ function getVendors() {
         vendor.isOneGov = false;
       }
       
+      // Parse Funding Department (Column I - index 8) - Top departments
+      if (row[8]) {
+        try {
+          const fundingDepartmentData = JSON.parse(row[8]);
+          if (fundingDepartmentData) {
+            vendor.fundingDepartment = fundingDepartmentData;
+          }
+        } catch (e) {
+          // Skip if parsing fails
+        }
+      }
+      
+      // Parse Funding Agency (Column V - index 21) - Top agencies
+      if (row[21]) {
+        try {
+          const fundingAgencyData = JSON.parse(row[21]);
+          if (fundingAgencyData) {
+            vendor.fundingAgency = fundingAgencyData;
+            vendor.topAgencies = getTopItems(fundingAgencyData, 10);
+          }
+        } catch (e) {
+          // Skip if parsing fails
+        }
+      }
+      
       vendors.push(vendor);
     }
     

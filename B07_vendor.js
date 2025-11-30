@@ -105,6 +105,12 @@ function getVendorEntities() {
         vendor.hasDiscounts = discount.discount_status === 'Active Discounts';
       }
       
+      // Parse Funding Department (Column I)
+      const fundingDepartment = parseJSONColumn(row[8]);
+      if (fundingDepartment) {
+        vendor.fundingDepartment = fundingDepartment;
+      }
+      
       // Parse Reseller (Column R)
       const reseller = parseJSONColumn(row[17]);
       if (reseller) {
@@ -114,7 +120,7 @@ function getVendorEntities() {
         }
       }
       
-      // Parse Funding Agency (Column V)
+      // Parse Funding Agency (Column V - index 21, but dataManager uses 1-based so it's actually index 21)
       const fundingAgency = parseJSONColumn(row[21]);
       if (fundingAgency) {
         vendor.fundingAgency = fundingAgency;

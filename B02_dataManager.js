@@ -144,7 +144,7 @@ class OneGovDataManager {
           bicReseller: 19,      // S
           bicOem: 20,          // T
           fasOem: 21,          // U
-          fundingAgency: 22,    // V
+          fundingAgency: 22,    // V - Column mapping verified from R01: V=index 21, but using 1-based here
           bicTopProductsPerAgency: 23, // W
           oneGovTier: 24,      // X
           fasDataTable: 25,    // Y
@@ -247,9 +247,12 @@ class OneGovDataManager {
         
         const value = row[colIndex - 1];
         
+        
         // Handle JSON columns
         if (this.isJsonColumn(key)) {
-          entity[key] = this.parseJSON(value);
+          const parsed = this.parseJSON(value);
+          entity[key] = parsed;
+          
         } else {
           // Handle regular columns
           entity[key] = value;
@@ -374,6 +377,27 @@ class OneGovDataManager {
         // Return all if no type specified
         return [...data.agencies, ...data.oems, ...data.vendors];
     }
+  }
+  
+  /**
+   * Get agencies - wrapper for getEntities('agency')
+   */
+  getAgencies(forceRefresh = false) {
+    return this.getEntities('agency', forceRefresh);
+  }
+  
+  /**
+   * Get OEMs - wrapper for getEntities('oem')
+   */
+  getOEMs(forceRefresh = false) {
+    return this.getEntities('oem', forceRefresh);
+  }
+  
+  /**
+   * Get vendors - wrapper for getEntities('vendor')
+   */
+  getVendors(forceRefresh = false) {
+    return this.getEntities('vendor', forceRefresh);
   }
   
   /**
