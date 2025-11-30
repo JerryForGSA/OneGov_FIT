@@ -1,0 +1,1263 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <base target="_top">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>OneGov FIT Market - Report Builder</title>
+    
+    <!-- React 18 CDN -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Chart.js for visualizations -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        :root {
+            --dark-blue: #0a2240;
+            --blue: #144673;
+            --light-blue: #3a6ea5;
+            --orange: #f47920;
+            --bg-light: #f4f6f7;
+            --text-light: #ffffff;
+            --text-dark: #333333;
+            --shadow: 0 2px 8px rgba(0,0,0,0.12);
+            --border-radius: 8px;
+            --green: #22c55e;
+            --red: #ef4444;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: var(--text-dark);
+            min-height: 100vh;
+            font-size: 14px;
+        }
+        
+        /* Header Styles */
+        .header {
+            background: linear-gradient(135deg, var(--dark-blue) 0%, var(--blue) 100%);
+            color: white;
+            padding: 16px 24px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        }
+        
+        .header-content {
+            max-width: 1600px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .logo {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--orange) 0%, #ff6b35 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.2rem;
+            box-shadow: 0 4px 12px rgba(244, 121, 32, 0.3);
+            color: white;
+        }
+        
+        .header-title h1 {
+            font-size: 1.3rem;
+            margin-bottom: 4px;
+        }
+        
+        .header-subtitle {
+            font-size: 0.75rem;
+            opacity: 0.8;
+        }
+        
+        /* Control Panel */
+        .control-panel {
+            background: white;
+            border-bottom: 2px solid #e5e7eb;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .control-content {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+        
+        .control-left, .control-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .control-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #1f2937;
+        }
+        
+        select, button {
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            border: 1px solid #d1d5db;
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        select:focus, button:focus {
+            outline: none;
+            border-color: var(--orange);
+            box-shadow: 0 0 0 3px rgba(244, 121, 32, 0.1);
+        }
+        
+        .selection-count {
+            padding: 8px 16px;
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #1e40af;
+        }
+        
+        .btn-export {
+            background: linear-gradient(135deg, var(--orange), #ff6b35);
+            color: white;
+            border: none;
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(244, 121, 32, 0.3);
+        }
+        
+        .btn-export:hover {
+            box-shadow: 0 4px 12px rgba(244, 121, 32, 0.4);
+            transform: translateY(-1px);
+        }
+        
+        .btn-reset:hover {
+            background: #f3f4f6;
+        }
+        
+        .info-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--blue), var(--dark-blue));
+            color: white;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            font-weight: 700;
+            transition: all 0.2s;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .info-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        
+        /* Cards Container */
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+        
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+            gap: 24px;
+        }
+        
+        /* Card Styles */
+        .card-container {
+            perspective: 1000px;
+            height: 380px;
+        }
+        
+        .card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+        }
+        
+        .card-container.flipped .card-inner {
+            transform: rotateY(180deg);
+        }
+        
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 8px;
+            background: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+            overflow: hidden;
+        }
+        
+        .card-back {
+            transform: rotateY(180deg);
+        }
+        
+        /* Selection states */
+        .card-unselected {
+            border: 1px solid #e5e7eb;
+        }
+        
+        .card-chart-selected {
+            border: 2px solid #93c5fd;
+            box-shadow: 0 0 0 3px rgba(147, 197, 253, 0.2);
+        }
+        
+        .card-table-selected {
+            border: 2px solid #93c5fd;
+            box-shadow: 0 0 0 3px rgba(147, 197, 253, 0.2);
+        }
+        
+        .card-both-selected {
+            border: 3px solid var(--blue);
+            box-shadow: 0 0 0 4px rgba(20, 70, 115, 0.3);
+        }
+        
+        /* Selection Badge */
+        .selection-badge {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            z-index: 10;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: white;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+        }
+        
+        .badge-chart {
+            background: linear-gradient(135deg, #93c5fd 0%, #60a5fa 100%);
+        }
+        
+        .badge-table {
+            background: linear-gradient(135deg, #93c5fd 0%, #60a5fa 100%);
+        }
+        
+        .badge-both {
+            background: linear-gradient(135deg, var(--blue) 0%, var(--dark-blue) 100%);
+        }
+        
+        /* Checkbox Container */
+        .checkbox-container {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            z-index: 10;
+            background: white;
+            padding: 6px 10px;
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .custom-checkbox {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #d1d5db;
+            border-radius: 4px;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.2s;
+        }
+        
+        .custom-checkbox.checked {
+            background: var(--blue);
+            border-color: var(--blue);
+        }
+        
+        .custom-checkbox.checked::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        
+        /* Card Content */
+        .card-header {
+            padding: 16px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .card-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--dark-blue);
+        }
+        
+        .card-body {
+            padding: 16px;
+            height: calc(100% - 100px);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 100%;
+            width: 100%;
+        }
+        
+        .table-container {
+            height: 100%;
+            overflow-y: auto;
+        }
+        
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+        
+        .data-table th {
+            background: #f8f9fa;
+            padding: 8px;
+            text-align: left;
+            font-weight: 600;
+            border-bottom: 2px solid #e5e7eb;
+            color: var(--dark-blue);
+            position: sticky;
+            top: 0;
+        }
+        
+        .data-table td {
+            padding: 8px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .data-table tr:hover {
+            background: #f8f9fa;
+        }
+        
+        /* Card Footer */
+        .card-footer {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 12px;
+            background: #f8f9fa;
+            border-top: 1px solid #e5e7eb;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+        }
+        
+        .card-footer:hover {
+            background: #e5e7eb;
+        }
+        
+        .flip-hint {
+            font-size: 0.75rem;
+            color: #6b7280;
+            font-weight: 600;
+        }
+        
+        /* Modal Styles */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 1000;
+            backdrop-filter: blur(4px);
+            animation: fadeIn 0.2s ease;
+        }
+        
+        .modal-overlay.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: slideIn 0.3s ease;
+        }
+        
+        .modal-header {
+            background: linear-gradient(135deg, var(--blue), var(--dark-blue));
+            color: white;
+            padding: 20px 24px;
+            border-radius: 12px 12px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .modal-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .modal-close {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 300;
+            transition: all 0.2s;
+        }
+        
+        .modal-close:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: rotate(90deg);
+        }
+        
+        .modal-body {
+            padding: 24px;
+        }
+        
+        .modal-instructions {
+            list-style: none;
+        }
+        
+        .modal-instructions li {
+            padding: 16px;
+            margin-bottom: 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid var(--orange);
+            transition: all 0.2s;
+        }
+        
+        .modal-instructions li:hover {
+            background: #eff6ff;
+            border-left-color: var(--blue);
+            transform: translateX(4px);
+        }
+        
+        .modal-instructions strong {
+            color: var(--blue);
+        }
+        
+        .hidden { display: none !important; }
+        
+        /* Loading State */
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+        
+        // Report Builder Component
+        function ReportBuilder() {
+            console.log('FRONTEND: ReportBuilder component mounted');
+            const [selections, setSelections] = useState({});
+            const [currentFilter, setCurrentFilter] = useState('all');
+            const [flippedCards, setFlippedCards] = useState({});
+            const [showModal, setShowModal] = useState(false);
+            const [exportDestination, setExportDestination] = useState('sheets');
+            const [isExporting, setIsExporting] = useState(false);
+            const chartRefs = useRef({});
+            
+            // New filtering states
+            const [entityFilter, setEntityFilter] = useState('');
+            const [parentFilter, setParentFilter] = useState('');
+            const [availableEntities, setAvailableEntities] = useState([]);
+            const [availableParents, setAvailableParents] = useState([]);
+            
+            // Get data from backend
+            const [cardData, setCardData] = useState([]);
+            const [loading, setLoading] = useState(true);
+            
+            useEffect(() => {
+                // Load data from backend
+                console.log('FRONTEND: useEffect triggered, about to load data');
+                loadReportData();
+                loadFilterOptions();
+            }, []);
+            
+            // Reload data when filters change
+            useEffect(() => {
+                if (entityFilter || parentFilter) {
+                    loadFilteredData();
+                } else {
+                    loadReportData();
+                }
+            }, [entityFilter, parentFilter]);
+            
+            const loadReportData = async () => {
+                try {
+                    setLoading(true);
+                    console.log('FRONTEND: About to call backend getReportBuilderData');
+                    
+                    // First test if backend functions are accessible
+                    google.script.run
+                        .withSuccessHandler((testResult) => {
+                            console.log('FRONTEND: Test function result:', testResult);
+                            // Now call the actual function
+                            google.script.run
+                                .withSuccessHandler((data) => {
+                                    console.log('FRONTEND: Loaded report data:', data);
+                                    setCardData(data || getDefaultCardData());
+                                    setLoading(false);
+                                })
+                                .withFailureHandler((error) => {
+                                    console.error('FRONTEND: Error loading report data:', error);
+                                    setCardData(getDefaultCardData());
+                                    setLoading(false);
+                                })
+                                .getReportBuilderData();
+                        })
+                        .withFailureHandler((error) => {
+                            console.error('FRONTEND: Test function failed:', error);
+                            setLoading(false);
+                        })
+                        .testReportBuilder();
+                } catch (error) {
+                    console.error('Error in loadReportData:', error);
+                    setCardData(getDefaultCardData());
+                    setLoading(false);
+                }
+            };
+            
+            const loadFilterOptions = async () => {
+                try {
+                    google.script.run
+                        .withSuccessHandler((data) => {
+                            if (data) {
+                                setAvailableEntities(data.entities || []);
+                                setAvailableParents(data.parents || []);
+                            }
+                        })
+                        .withFailureHandler((error) => {
+                            console.error('Error loading filter options:', error);
+                        })
+                        .getReportBuilderFilters();
+                } catch (error) {
+                    console.error('Error in loadFilterOptions:', error);
+                }
+            };
+            
+            const loadFilteredData = async () => {
+                try {
+                    setLoading(true);
+                    google.script.run
+                        .withSuccessHandler((data) => {
+                            console.log('Loaded filtered report data:', data);
+                            setCardData(data || []);
+                            setLoading(false);
+                        })
+                        .withFailureHandler((error) => {
+                            console.error('Error loading filtered report data:', error);
+                            setLoading(false);
+                        })
+                        .getFilteredReportBuilderData(entityFilter, parentFilter);
+                } catch (error) {
+                    console.error('Error in loadFilteredData:', error);
+                    setLoading(false);
+                }
+            };
+            
+            
+            // Default card data (fallback)
+            const getDefaultCardData = () => [
+                {
+                    id: 'obligations',
+                    title: 'Five-Year Obligations Trend',
+                    category: 'financial',
+                    chartType: 'line',
+                    chartData: {
+                        labels: ['FY22', 'FY23', 'FY24', 'FY25', 'FY26'],
+                        datasets: [{
+                            label: 'Obligations ($M)',
+                            data: [286, 358, 598, 258, 185],
+                            borderColor: '#144673',
+                            backgroundColor: 'rgba(20, 70, 115, 0.1)',
+                            tension: 0.4
+                        }]
+                    },
+                    tableData: {
+                        headers: ['Fiscal Year', 'Obligations', 'YoY Change', '% Change'],
+                        rows: [
+                            ['FY22', '$286M', '--', '--'],
+                            ['FY23', '$358M', '+$72M', '+25.2%'],
+                            ['FY24', '$598M', '+$240M', '+67.0%'],
+                            ['FY25', '$258M', '-$340M', '-56.9%'],
+                            ['FY26*', '$185M', '-$73M', '-28.3%']
+                        ]
+                    }
+                },
+                {
+                    id: 'tier-dist',
+                    title: 'Government Tier Distribution',
+                    category: 'financial',
+                    chartType: 'bar',
+                    chartData: {
+                        labels: ['BIC', 'Tier 2', 'Tier 1', 'Tier 0'],
+                        datasets: [{
+                            label: 'Total ($M)',
+                            data: [831, 527, 75, 65],
+                            backgroundColor: ['#144673', '#3a6ea5', '#f47920', '#ff6b35']
+                        }]
+                    },
+                    tableData: {
+                        headers: ['Tier', 'FY22', 'FY23', 'FY24', 'FY25', 'Total', '%'],
+                        rows: [
+                            ['BIC', '$155M', '$211M', '$298M', '$168M', '$831M', '55.5%'],
+                            ['Tier 2', '$56M', '$116M', '$279M', '$76M', '$527M', '35.2%'],
+                            ['Tier 1', '$51M', '$11M', '$13M', '$357K', '$75M', '5.0%'],
+                            ['Tier 0', '$24M', '$20M', '$8M', '$14M', '$65M', '4.3%']
+                        ]
+                    }
+                },
+                {
+                    id: 'resellers',
+                    title: 'Top 10 Resellers Performance',
+                    category: 'vendors',
+                    chartType: 'doughnut',
+                    chartData: {
+                        labels: ['Four Points', 'AWS Direct', 'Strategic', 'New Tech', 'ThunderCat', 'Other'],
+                        datasets: [{
+                            data: [612, 390, 121, 46, 45, 285],
+                            backgroundColor: ['#0a2240', '#144673', '#3a6ea5', '#f47920', '#ff6b35', '#e5e7eb']
+                        }]
+                    },
+                    tableData: {
+                        headers: ['Rank', 'Reseller Name', 'Total', '% of Total'],
+                        rows: [
+                            ['1', 'Four Points Technology', '$612M', '40.8%'],
+                            ['2', 'Amazon Web Services', '$390M', '26.0%'],
+                            ['3', 'Strategic Communications', '$121M', '8.1%'],
+                            ['4', 'New Tech Solutions', '$46M', '3.0%'],
+                            ['5', 'ThunderCat Technology', '$45M', '3.0%']
+                        ]
+                    }
+                },
+                {
+                    id: 'small-business',
+                    title: 'Small Business Performance',
+                    category: 'smallbusiness',
+                    chartType: 'pie',
+                    chartData: {
+                        labels: ['Small Business', 'Other'],
+                        datasets: [{
+                            data: [1003, 496],
+                            backgroundColor: ['#22c55e', '#e5e7eb']
+                        }]
+                    },
+                    tableData: {
+                        headers: ['Category', 'FY22', 'FY23', 'FY24', 'FY25', 'Total', '%'],
+                        rows: [
+                            ['Small Business', '$230M', '$252M', '$337M', '$184M', '$1.00B', '66.9%'],
+                            ['Other', '$56M', '$106M', '$260M', '$74M', '$496M', '33.1%']
+                        ]
+                    }
+                },
+                {
+                    id: 'agencies',
+                    title: 'Top 10 Funding Agencies',
+                    category: 'agencies',
+                    chartType: 'horizontalBar',
+                    chartData: {
+                        labels: ['CBP', 'Navy', 'VA', 'DHA', 'Air Force'],
+                        datasets: [{
+                            label: 'Total ($M)',
+                            data: [158, 139, 120, 117, 103],
+                            backgroundColor: '#144673'
+                        }]
+                    },
+                    tableData: {
+                        headers: ['Agency', 'FY24', 'FY25', 'Total', '%'],
+                        rows: [
+                            ['U.S. Customs & Border', '$74M', '$21M', '$158M', '10.5%'],
+                            ['Dept of the Navy', '$76M', '-$6M', '$139M', '9.2%'],
+                            ['Veterans Affairs', '$22M', '$73M', '$120M', '8.0%'],
+                            ['Defense Health Agency', '$45M', '$37M', '$117M', '7.8%'],
+                            ['Dept of the Air Force', '$59M', '$11M', '$103M', '6.8%']
+                        ]
+                    }
+                },
+                {
+                    id: 'discounts',
+                    title: 'Active Discount Analysis',
+                    category: 'discounts',
+                    chartType: 'polarArea',
+                    chartData: {
+                        labels: ['Migration', 'Mod-App', 'Mod-Infra', 'Azure', 'Other'],
+                        datasets: [{
+                            data: [174, 62, 27, 6, 8],
+                            backgroundColor: [
+                                'rgba(10, 34, 64, 0.8)',
+                                'rgba(20, 70, 115, 0.8)',
+                                'rgba(58, 110, 165, 0.8)',
+                                'rgba(244, 121, 32, 0.8)',
+                                'rgba(229, 231, 235, 0.8)'
+                            ]
+                        }]
+                    },
+                    tableData: {
+                        headers: ['Discount Category', 'FY25', '% of Disc.', 'Contracts'],
+                        rows: [
+                            ['AWS Migration Credits', '$174M', '62.7%', '12'],
+                            ['AWS Mod - Application', '$62M', '22.2%', '8'],
+                            ['AWS Mod - Infrastructure', '$27M', '9.7%', '5'],
+                            ['Azure', '$6M', '2.1%', '1'],
+                            ['AWS Training & Cert', '$2M', '0.6%', '3']
+                        ]
+                    }
+                }
+            ];
+            
+            // Toggle card flip
+            const toggleFlip = (cardId) => {
+                setFlippedCards(prev => ({
+                    ...prev,
+                    [cardId]: !prev[cardId]
+                }));
+            };
+            
+            // Toggle selection
+            const toggleSelection = (cardId, side) => {
+                setSelections(prev => {
+                    const current = prev[cardId] || { chart: false, table: false };
+                    return {
+                        ...prev,
+                        [cardId]: {
+                            ...current,
+                            [side]: !current[side]
+                        }
+                    };
+                });
+            };
+            
+            // Get selection state
+            const getSelectionState = (cardId) => {
+                const sel = selections[cardId];
+                if (!sel) return 'unselected';
+                if (sel.chart && sel.table) return 'both';
+                if (sel.chart) return 'chart';
+                if (sel.table) return 'table';
+                return 'unselected';
+            };
+            
+            // Get selection count
+            const getSelectionCount = () => {
+                return Object.values(selections).reduce((count, sel) => {
+                    if (sel.chart) count++;
+                    if (sel.table) count++;
+                    return count;
+                }, 0);
+            };
+            
+            // Reset selections
+            const resetSelections = () => {
+                setSelections({});
+                setFlippedCards({});
+            };
+            
+            // Export report
+            const handleExport = async () => {
+                setIsExporting(true);
+                
+                const selectedItems = [];
+                Object.entries(selections).forEach(([cardId, sel]) => {
+                    const card = cardData.find(c => c.id === cardId);
+                    if (card) {
+                        if (sel.chart) {
+                            selectedItems.push({
+                                type: 'chart',
+                                title: card.title,
+                                data: card.chartData,
+                                chartType: card.chartType
+                            });
+                        }
+                        if (sel.table) {
+                            selectedItems.push({
+                                type: 'table',
+                                title: card.title,
+                                data: card.tableData
+                            });
+                        }
+                    }
+                });
+                
+                try {
+                    google.script.run
+                        .withSuccessHandler((result) => {
+                            console.log('Export successful:', result);
+                            setIsExporting(false);
+                            alert(`Report exported successfully to ${exportDestination}!`);
+                            resetSelections();
+                        })
+                        .withFailureHandler((error) => {
+                            console.error('Export failed:', error);
+                            setIsExporting(false);
+                            alert('Export failed. Please try again.');
+                        })
+                        .exportReport(selectedItems, exportDestination);
+                } catch (error) {
+                    console.error('Export error:', error);
+                    setIsExporting(false);
+                }
+            };
+            
+            // Filter cards
+            let filteredCards = currentFilter === 'all' 
+                ? cardData 
+                : cardData.filter(card => card.category === currentFilter);
+                
+            // Apply entity and parent filters
+            if (entityFilter) {
+                filteredCards = filteredCards.filter(card => 
+                    card.entityFilter === entityFilter || card.id.includes(entityFilter)
+                );
+            }
+            
+            if (parentFilter) {
+                filteredCards = filteredCards.filter(card => 
+                    card.parentFilter === parentFilter || card.id.includes(parentFilter)
+                );
+            }
+            
+            const categoryNames = {
+                'all': 'All Cards',
+                'agency': 'Agency Data',
+                'oem': 'OEM Data',
+                'vendor': 'Vendor Data'
+            };
+            
+            return (
+                <div>
+                    {/* Header */}
+                    <div className="header">
+                        <div className="header-content">
+                            <div className="header-left">
+                                <div className="logo">1G</div>
+                                <div>
+                                    <h1 className="header-title">OneGov FIT Market</h1>
+                                    <div className="header-subtitle">Report Builder</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {/* Control Panel */}
+                    <div className="control-panel">
+                        <div className="control-content">
+                            <div className="control-left">
+                                <div className="control-title">🎯 Report Builder</div>
+                                <select 
+                                    value={currentFilter}
+                                    onChange={(e) => setCurrentFilter(e.target.value)}
+                                    style={{marginRight: '12px'}}
+                                >
+                                    {Object.entries(categoryNames).map(([value, label]) => (
+                                        <option key={value} value={value}>
+                                            {label} ({value === 'all' ? cardData.length : 
+                                                cardData.filter(c => c.category === value).length})
+                                        </option>
+                                    ))}
+                                </select>
+                                
+                                <select 
+                                    value={entityFilter}
+                                    onChange={(e) => setEntityFilter(e.target.value)}
+                                    style={{marginRight: '12px'}}
+                                >
+                                    <option value="">All Entities</option>
+                                    {availableEntities.map(entity => (
+                                        <option key={entity} value={entity}>{entity}</option>
+                                    ))}
+                                </select>
+                                
+                                <select 
+                                    value={parentFilter}
+                                    onChange={(e) => setParentFilter(e.target.value)}
+                                >
+                                    <option value="">All Parents/Departments</option>
+                                    {availableParents.map(parent => (
+                                        <option key={parent} value={parent}>{parent}</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div className="control-right">
+                                <button 
+                                    className="info-btn" 
+                                    onClick={() => setShowModal(true)}
+                                    title="How to Use"
+                                >
+                                    ℹ
+                                </button>
+                                {getSelectionCount() > 0 && (
+                                    <>
+                                        <div className="selection-count">
+                                            {getSelectionCount()} items selected
+                                        </div>
+                                        <select 
+                                            value={exportDestination}
+                                            onChange={(e) => setExportDestination(e.target.value)}
+                                        >
+                                            <option value="sheets">📊 Google Sheets</option>
+                                            <option value="docs">📄 Google Docs</option>
+                                            <option value="slides">🎞 Google Slides</option>
+                                        </select>
+                                        <button 
+                                            className="btn-export"
+                                            onClick={handleExport}
+                                            disabled={isExporting}
+                                        >
+                                            {isExporting ? (
+                                                <>
+                                                    <span className="loading-spinner"></span>
+                                                    <span> Exporting...</span>
+                                                </>
+                                            ) : 'Export'}
+                                        </button>
+                                    </>
+                                )}
+                                <button className="btn-reset" onClick={resetSelections}>
+                                    Reset
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {/* Cards Grid */}
+                    <div className="container">
+                        {loading ? (
+                            <div style={{textAlign: 'center', padding: '50px'}}>
+                                <div className="loading-spinner" style={{
+                                    width: '50px', 
+                                    height: '50px',
+                                    borderColor: 'var(--blue)',
+                                    borderTopColor: 'var(--orange)'
+                                }}></div>
+                                <p style={{marginTop: '20px'}}>Loading report data...</p>
+                            </div>
+                        ) : (
+                            <div className="cards-grid">
+                                {filteredCards.map(card => (
+                                    <ReportCard
+                                        key={card.id}
+                                        card={card}
+                                        isFlipped={flippedCards[card.id]}
+                                        selection={selections[card.id]}
+                                        selectionState={getSelectionState(card.id)}
+                                        onFlip={() => toggleFlip(card.id)}
+                                        onSelect={(side) => toggleSelection(card.id, side)}
+                                    />
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                    
+                    {/* Info Modal */}
+                    <div className={`modal-overlay ${showModal ? 'active' : ''}`}>
+                        <div className="modal-content">
+                            <div className="modal-header">
+                                <div className="modal-title">
+                                    <span>💡</span>
+                                    <span>How to Use Report Builder</span>
+                                </div>
+                                <button className="modal-close" onClick={() => setShowModal(false)}>
+                                    ×
+                                </button>
+                            </div>
+                            <div className="modal-body">
+                                <ul className="modal-instructions">
+                                    <li>
+                                        <strong>🔄 Flip cards:</strong> Click the flip hint at the bottom of each card to switch between chart and table views
+                                    </li>
+                                    <li>
+                                        <strong>✔ Select items:</strong> Check boxes on either or both sides of each card to add them to your export
+                                    </li>
+                                    <li>
+                                        <strong>🎨 Visual feedback:</strong> Light blue border = one side selected, Dark blue border = both sides selected
+                                    </li>
+                                    <li>
+                                        <strong>📊 Export:</strong> Choose your destination (Sheets/Docs/Slides) and click the Export button to generate your report
+                                    </li>
+                                    <li>
+                                        <strong>🔍 Filter:</strong> Use the dropdown to show only specific categories of cards
+                                    </li>
+                                    <li>
+                                        <strong>🔄 Reset:</strong> Clear all selections to start over
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+        
+        // Report Card Component
+        function ReportCard({ card, isFlipped, selection, selectionState, onFlip, onSelect }) {
+            const chartRef = useRef(null);
+            const chartInstance = useRef(null);
+            
+            useEffect(() => {
+                if (!isFlipped && chartRef.current && card.chartData) {
+                    // Destroy existing chart
+                    if (chartInstance.current) {
+                        chartInstance.current.destroy();
+                    }
+                    
+                    // Create new chart
+                    const ctx = chartRef.current.getContext('2d');
+                    
+                    // Fix chart type compatibility
+                    let chartType = card.chartType || 'bar';
+                    let chartOptions = {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: ['pie', 'doughnut', 'polarArea'].includes(chartType),
+                                position: 'bottom'
+                            }
+                        }
+                    };
+                    
+                    // Handle horizontal bar charts
+                    if (chartType === 'horizontalBar') {
+                        chartType = 'bar';
+                        chartOptions.indexAxis = 'y';
+                    }
+                    
+                    // Add scales for chart types that support them
+                    if (!['pie', 'doughnut', 'polarArea'].includes(chartType)) {
+                        chartOptions.scales = {
+                            y: {
+                                beginAtZero: true
+                            }
+                        };
+                    }
+                    
+                    chartInstance.current = new Chart(ctx, {
+                        type: chartType,
+                        data: card.chartData,
+                        options: chartOptions
+                    });
+                }
+                
+                return () => {
+                    if (chartInstance.current) {
+                        chartInstance.current.destroy();
+                    }
+                };
+            }, [isFlipped, card]);
+            
+            const getCardClass = () => {
+                switch(selectionState) {
+                    case 'chart':
+                    case 'table':
+                        return 'card-chart-selected';
+                    case 'both':
+                        return 'card-both-selected';
+                    default:
+                        return 'card-unselected';
+                }
+            };
+            
+            const getBadgeClass = () => {
+                switch(selectionState) {
+                    case 'chart':
+                        return 'badge-chart';
+                    case 'table':
+                        return 'badge-table';
+                    case 'both':
+                        return 'badge-both';
+                    default:
+                        return '';
+                }
+            };
+            
+            const getBadgeText = () => {
+                switch(selectionState) {
+                    case 'chart':
+                        return '📊 Chart Selected';
+                    case 'table':
+                        return '📋 Table Selected';
+                    case 'both':
+                        return '✨ Both Selected';
+                    default:
+                        return '';
+                }
+            };
+            
+            return (
+                <div className={`card-container ${isFlipped ? 'flipped' : ''}`}>
+                    <div className="card-inner">
+                        {/* Front - Chart */}
+                        <div className={`card-face card-front ${getCardClass()}`}>
+                            {selectionState !== 'unselected' && (
+                                <div className={`selection-badge ${getBadgeClass()}`}>
+                                    {getBadgeText()}
+                                </div>
+                            )}
+                            <div className="checkbox-container">
+                                <div 
+                                    className={`custom-checkbox ${selection?.chart ? 'checked' : ''}`}
+                                    onClick={() => onSelect('chart')}
+                                ></div>
+                                <span style={{fontSize: '0.75rem', color: '#6b7280'}}>Chart</span>
+                            </div>
+                            <div className="card-header">
+                                <div className="card-title">{card.title}</div>
+                            </div>
+                            <div className="card-body">
+                                <div className="chart-container">
+                                    <canvas ref={chartRef}></canvas>
+                                </div>
+                            </div>
+                            <div className="card-footer" onClick={onFlip}>
+                                <div className="flip-hint">🔄 Click to see table view</div>
+                            </div>
+                        </div>
+                        
+                        {/* Back - Table */}
+                        <div className={`card-face card-back ${getCardClass()}`}>
+                            {selectionState !== 'unselected' && (
+                                <div className={`selection-badge ${getBadgeClass()}`}>
+                                    {getBadgeText()}
+                                </div>
+                            )}
+                            <div className="checkbox-container">
+                                <div 
+                                    className={`custom-checkbox ${selection?.table ? 'checked' : ''}`}
+                                    onClick={() => onSelect('table')}
+                                ></div>
+                                <span style={{fontSize: '0.75rem', color: '#6b7280'}}>Table</span>
+                            </div>
+                            <div className="card-header">
+                                <div className="card-title">{card.title}</div>
+                            </div>
+                            <div className="card-body">
+                                <div className="table-container">
+                                    <table className="data-table">
+                                        <thead>
+                                            <tr>
+                                                {card.tableData?.headers.map((header, idx) => (
+                                                    <th key={idx}>{header}</th>
+                                                ))}
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {card.tableData?.rows.map((row, idx) => (
+                                                <tr key={idx}>
+                                                    {row.map((cell, cellIdx) => (
+                                                        <td key={cellIdx}>{cell}</td>
+                                                    ))}
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <div className="card-footer" onClick={onFlip}>
+                                <div className="flip-hint">📊 Click to see chart view</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+        
+        // Render the app
+        ReactDOM.render(<ReportBuilder />, document.getElementById('root'));
+    </script>
+</body>
+</html>

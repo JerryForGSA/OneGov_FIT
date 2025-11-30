@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <base target="_top">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>OneGov FIT Market - Entity Detail View</title>
+    <script src="B11_ProcurementTables.js"></script>
+    
+    <style>
+        :root {
+            --dark-blue: #0a2240;
+            --blue: #144673;
+            --light-blue: #3a6ea5;
+            --orange: #f47920;
+            --bg-light: #f4f6f7;
+            --text-light: #ffffff;
+            --text-dark: #333333;
+            --shadow: 0 2px 8px rgba(0,0,0,0.12);
+            --border-radius: 8px;
+            --green: #22c55e;
+            --red: #ef4444;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: rgba(0, 0, 0, 0.9);
+            color: var(--text-dark);
+            overflow-y: auto;
+            font-size: 16px;
+        }
+        
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+            overflow-y: auto;
+        }
+        
+        .modal-content {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        }
+        
+        /* Header Styles */
+        .modal-header {
+            background: linear-gradient(135deg, var(--dark-blue) 0%, var(--blue) 100%);
+            color: white;
+            padding: 16px 24px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        }
+        
+        .header-container {
+            max-width: 1800px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+        }
+        
+        .breadcrumb span {
+            color: rgba(255,255,255,0.8);
+            cursor: pointer;
+        }
+        
+        .breadcrumb .separator {
+            color: rgba(255,255,255,0.6);
+        }
+        
+        .entity-info h1 {
+            font-size: 1.5rem;
+            margin-bottom: 4px;
+        }
+        
+        .entity-meta {
+            display: flex;
+            gap: 16px;
+            font-size: 0.8rem;
+            opacity: 0.9;
+        }
+        
+        .entity-badges {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .badge {
+            background: var(--orange);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        
+        .close-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* Content Styles */
+        .content-container {
+            max-width: 1800px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+        
+        .section {
+            margin-bottom: 32px;
+        }
+        
+        .section-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--dark-blue);
+            margin-bottom: 20px;
+            padding-bottom: 8px;
+            border-bottom: 3px solid var(--orange);
+        }
+        
+        .profile-card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            padding: 24px;
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+        
+        .profile-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        
+        .profile-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--dark-blue);
+            margin-bottom: 8px;
+        }
+        
+        .profile-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            color: var(--blue);
+        }
+        
+        .tier-badge {
+            background: var(--green);
+            color: white;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 0.8rem;
+        }
+        
+        .parent-company {
+            color: #ccc;
+        }
+        
+        .action-links {
+            display: flex;
+            gap: 12px;
+        }
+        
+        .action-link {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+        
+        .website-link {
+            background: var(--blue);
+        }
+        
+        .website-link:hover {
+            background: var(--dark-blue);
+        }
+        
+        .linkedin-link {
+            background: #0077B5;
+        }
+        
+        .linkedin-link:hover {
+            background: #005c8a;
+        }
+        
+        .overview-text {
+            font-size: 1rem;
+            line-height: 1.6;
+            color: var(--text-dark);
+            padding: 16px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            border-left: 4px solid var(--orange);
+        }
+        
+        /* Carousel Styles */
+        .carousel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .carousel-nav {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        
+        .nav-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--blue);
+            color: white;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+        
+        .nav-btn:hover {
+            background: var(--dark-blue);
+        }
+        
+        .indicators {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .carousel-container {
+            overflow: hidden;
+            border-radius: 8px;
+        }
+        
+        .carousel-track {
+            display: flex;
+            transition: transform 0.3s ease;
+        }
+        
+        .detail-slide {
+            min-width: 100%;
+            background: white;
+            border-radius: 8px;
+            padding: 24px;
+            box-shadow: var(--shadow);
+        }
+        
+        .slide-title {
+            color: var(--dark-blue);
+            font-weight: 600;
+            margin-bottom: 20px;
+            font-size: 1.3rem;
+        }
+        
+        .slide-content {
+            height: 300px;
+        }
+        
+        .slide-footer {
+            margin-top: 20px;
+            padding-top: 16px;
+            border-top: 2px solid var(--bg-light);
+        }
+        
+        .slide-description {
+            color: var(--blue);
+            font-size: 0.95rem;
+            text-align: center;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .header-container {
+                flex-direction: column;
+                gap: 12px;
+                text-align: center;
+            }
+            
+            .profile-header {
+                flex-direction: column;
+                gap: 12px;
+            }
+            
+            .carousel-header {
+                flex-direction: column;
+                gap: 12px;
+            }
+            
+            .action-links {
+                flex-direction: column;
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- This file contains the HTML template for entity detail modal -->
+    <!-- It will be used by the main dashboard to display entity details -->
+    
+    <script>
+        /**
+         * Create and show entity detail modal
+         */
+        function showEntityDetail(entity, entityIndex) {
+            console.log(`🔍 MODAL DEBUG: Entity "${entity.name}" structure:`, entity);
+            
+            // Process USAi profile data
+            const usaiProfile = processUSAiProfile(entity);
+            
+            // Process entity data for charts
+            const entityData = processEntityData(entity);
+            
+            // Create modal overlay
+            const modalOverlay = document.createElement('div');
+            modalOverlay.className = 'modal-overlay';
+            
+            // Generate modal HTML
+            modalOverlay.innerHTML = createEntityModalHTML(entity, entityData, usaiProfile);
+            
+            // Add to page
+            document.body.appendChild(modalOverlay);
+            
+            // Initialize carousel
+            initializeDetailCarousel();
+            
+            // Initialize procurement tables if URLs exist
+            if (entity.fasTableUrl || entity.bicTableUrl) {
+                setTimeout(() => {
+                    console.log('🚀 PROCUREMENT INIT: Setting up tables for entity:', entity.name);
+                    
+                    // Set global variables
+                    window.currentProcurementEntity = entity;
+                    window.fasTableData = { data: [], pagination: { currentPage: 1, totalPages: 0 } };
+                    window.bicTableData = { data: [], pagination: { currentPage: 1, totalPages: 0 } };
+                    
+                    // Load table data
+                    if (entity.fasTableUrl && window.loadFasPage) {
+                        console.log('🔄 Loading FAS table for:', entity.name);
+                        window.loadFasPage(1);
+                    }
+                    if (entity.bicTableUrl && window.loadBicPage) {
+                        console.log('🔄 Loading BIC table for:', entity.name);
+                        window.loadBicPage(1);
+                    }
+                }, 500);
+            }
+            
+            // Add click outside to close
+            modalOverlay.addEventListener('click', (e) => {
+                if (e.target === modalOverlay) {
+                    modalOverlay.remove();
+                }
+            });
+        }
+        
+        /**
+         * Generate the complete modal HTML
+         */
+        function createEntityModalHTML(entity, entityData, usaiProfile) {
+            return `
+                <div class="modal-content">
+                    <!-- Header -->
+                    <div class="modal-header">
+                        <div class="header-container">
+                            <div class="breadcrumb">
+                                <span onclick="this.closest('.modal-overlay').remove()">OneGov FIT</span>
+                                <span class="separator">›</span>
+                                <span>${entity.type?.toUpperCase() || 'Entity'}s</span>
+                                <span class="separator">›</span>
+                                <span>${entity.name}</span>
+                            </div>
+                            
+                            <div class="entity-info">
+                                <h1>${entity.name}</h1>
+                                <div class="entity-meta">
+                                    <span>Total Obligations: ${formatCurrencyShort(entity.totalObligations || 0)}</span>
+                                </div>
+                            </div>
+                            
+                            <div class="entity-badges">
+                                <span class="badge">${entity.type?.toUpperCase() || 'ENTITY'}</span>
+                                ${entity.tier ? `<span class="badge">${entity.tier}</span>` : ''}
+                            </div>
+                            
+                            <button class="close-btn" onclick="this.closest('.modal-overlay').remove()">&times;</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Content -->
+                    <div class="content-container">
+                        <!-- Profile Section -->
+                        <div class="section">
+                            <h2 class="section-title">${entity.type?.toUpperCase() || 'Entity'} Profile</h2>
+                            <div class="profile-card">
+                                <div class="profile-header">
+                                    <div>
+                                        <h3 class="profile-title">${entity.name}</h3>
+                                        <div class="profile-meta">
+                                            ${entity.tier ? `<span class="tier-badge">${entity.tier} (${formatCurrencyShort(entity.totalObligations || 0)}+)</span>` : ''}
+                                            ${entity.parentCompany && entity.parentCompany !== 'N/A' ? `<span class="parent-company">•</span><span>Parent: ${entity.parentCompany}</span>` : ''}
+                                        </div>
+                                    </div>
+                                    <div class="action-links">
+                                        ${usaiProfile?.website ? `
+                                        <a href="${usaiProfile.website.startsWith('http') ? usaiProfile.website : 'https://' + usaiProfile.website}" 
+                                           target="_blank" 
+                                           rel="noopener noreferrer"
+                                           class="action-link website-link">
+                                            🌐 Website
+                                        </a>` : ''}
+                                        ${usaiProfile?.linkedin ? `
+                                        <a href="${usaiProfile.linkedin.startsWith('http') ? usaiProfile.linkedin : 'https://' + usaiProfile.linkedin}" 
+                                           target="_blank" 
+                                           rel="noopener noreferrer"
+                                           class="action-link linkedin-link">
+                                            💼 LinkedIn
+                                        </a>` : ''}
+                                    </div>
+                                </div>
+                                <div class="overview-text">
+                                    ${usaiProfile?.overview || `${entity.name} is a leading ${entity.type?.toLowerCase() || 'organization'} with ${formatCurrencyShort(entity.totalObligations || 0)} in total government obligations. ${entity.tier ? `Classified as ${entity.tier}, this entity represents a significant presence in the federal technology marketplace.` : 'Active in the federal procurement ecosystem.'}${entity.aiProduct ? ' The organization offers AI-enabled products and services to government customers.' : ''}`}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Performance Analytics Carousel -->
+                        <div class="section">
+                            <div class="carousel-header">
+                                <h2 class="section-title">Performance Analytics Dashboard</h2>
+                                <div class="carousel-nav">
+                                    <button class="nav-btn" onclick="prevDetailSlide()">‹</button>
+                                    <div id="detail-indicators" class="indicators"></div>
+                                    <button class="nav-btn" onclick="nextDetailSlide()">›</button>
+                                </div>
+                            </div>
+                            
+                            <div id="detail-carousel-container" class="carousel-container">
+                                <div id="detail-carousel-track" class="carousel-track">
+                                    ${generateDetailSlides(entity, entityData)}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Procurement Tables Section -->
+                        ${generateProcurementTables(entity)}
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Helper functions
+        function processUSAiProfile(entity) {
+            return entity.usaiProfile || {};
+        }
+        
+        function processEntityData(entity) {
+            return {
+                totalObligations: entity.totalObligations || 0
+            };
+        }
+        
+        // formatCurrencyShort is available from B11_ProcurementTables.js
+
+        // Generate detail slides for carousel (basic implementation)
+        function generateDetailSlides(entity, entityData) {
+            // Basic slide showing entity overview
+            return `
+                <div class="detail-slide" data-slide="0">
+                    <div class="slide-title">📊 Entity Overview</div>
+                    <div class="slide-content" style="height: 250px; display: flex; align-items: center; justify-content: center; flex-direction: column;">
+                        <div style="text-align: center; padding: 20px;">
+                            <h3 style="color: var(--dark-blue); margin-bottom: 16px;">${entity.name}</h3>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; max-width: 400px;">
+                                <div style="background: #f8f9fa; padding: 16px; border-radius: 8px;">
+                                    <div style="font-size: 1.5rem; font-weight: bold; color: var(--orange);">${formatCurrencyShort(entity.totalObligations || 0)}</div>
+                                    <div style="color: var(--blue); font-size: 0.9rem;">Total Obligations</div>
+                                </div>
+                                <div style="background: #f8f9fa; padding: 16px; border-radius: 8px;">
+                                    <div style="font-size: 1.5rem; font-weight: bold; color: var(--green);">${entity.type?.toUpperCase() || 'ENTITY'}</div>
+                                    <div style="color: var(--blue); font-size: 0.9rem;">Entity Type</div>
+                                </div>
+                            </div>
+                            ${entity.tier ? `
+                                <div style="margin-top: 16px; padding: 8px 16px; background: var(--green); color: white; border-radius: 6px; display: inline-block;">
+                                    ${entity.tier}
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                    <div class="slide-footer">
+                        <div class="slide-description">Basic entity information and metrics</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Carousel navigation functions
+        function initializeDetailCarousel() {
+            // Basic carousel initialization
+            console.log('📊 Detail carousel initialized');
+        }
+        
+        function prevDetailSlide() {
+            console.log('📊 Previous slide');
+        }
+        
+        function nextDetailSlide() {
+            console.log('📊 Next slide');
+        }
+        
+        function goToDetailSlide(index) {
+            console.log('📊 Go to slide:', index);
+        }
+
+        // Generate procurement tables (FAS and BIC) for entity detail view - LAZY LOADING
+        function generateProcurementTables(entity) {
+            console.log('🏗️ PROCUREMENT TABLES: Checking entity for table URLs:', {
+                entityName: entity.name,
+                hasFasTableUrl: !!entity.fasTableUrl,
+                hasBicTableUrl: !!entity.bicTableUrl,
+                fasTableUrl: entity.fasTableUrl?.substring(0, 50) || 'None',
+                bicTableUrl: entity.bicTableUrl?.substring(0, 50) || 'None'
+            });
+            
+            if (!entity.fasTableUrl && !entity.bicTableUrl) {
+                console.log('❌ PROCUREMENT TABLES: No FAS or BIC table URLs found for entity:', entity.name);
+                return '';
+            }
+            
+            return `
+                <div style="margin-bottom: 32px;">
+                    <h2 style="font-size: 1.4rem; font-weight: 700; color: var(--dark-blue); margin-bottom: 20px; padding-bottom: 8px; border-bottom: 3px solid var(--orange);">
+                        📋 Procurement Tables
+                    </h2>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr; gap: 24px;">
+                        ${entity.fasTableUrl ? `
+                            <div id="fas-table-container" style="background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.12); padding: 20px;">
+                                <h3 style="color: var(--dark-blue); font-weight: 600; margin-bottom: 16px; font-size: 1.1rem;">
+                                    📊 FAS Procurement Data
+                                    <span id="fas-table-status" style="font-size: 0.85rem; font-weight: normal; color: var(--blue); margin-left: 8px;">
+                                        Loading...
+                                    </span>
+                                </h3>
+                                <div id="fas-table-content" style="text-align: center; padding: 40px; color: var(--blue);">
+                                    🔄 Loading FAS procurement data...
+                                </div>
+                            </div>
+                        ` : ''}
+                        
+                        ${entity.bicTableUrl ? `
+                            <div id="bic-table-container" style="background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.12); padding: 20px;">
+                                <h3 style="color: var(--dark-blue); font-weight: 600; margin-bottom: 16px; font-size: 1.1rem;">
+                                    🛒 BIC Procurement Data
+                                    <span id="bic-table-status" style="font-size: 0.85rem; font-weight: normal; color: var(--blue); margin-left: 8px;">
+                                        Loading...
+                                    </span>
+                                </h3>
+                                <div id="bic-table-content" style="text-align: center; padding: 40px; color: var(--blue);">
+                                    🔄 Loading BIC procurement data...
+                                </div>
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Make functions available globally
+        window.showEntityDetail = showEntityDetail;
+        window.prevDetailSlide = prevDetailSlide;
+        window.nextDetailSlide = nextDetailSlide;
+        window.goToDetailSlide = goToDetailSlide;
+        window.generateProcurementTables = generateProcurementTables;
+    </script>
+</body>
+</html>
